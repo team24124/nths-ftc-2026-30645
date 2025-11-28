@@ -31,6 +31,10 @@ public class BasicOmniTeleOp extends OpMode {
 
     private DcMotorEx flywheel;
 
+    private CRServo leftFeeder;
+
+    private CRServo rightFeeder;
+
     @Override
     public void init() {
         follower = Constants.createFollower(hardwareMap);
@@ -40,6 +44,10 @@ public class BasicOmniTeleOp extends OpMode {
         // Intiailize the flywheel
         flywheel = hardwareMap.get(DcMotorEx.class,"launcher");
         flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
+        leftFeeder = hardwareMap.get(CRServo.class, "leftFeeder");
+        rightFeeder = hardwareMap.get(CRServo.class, "rightFeeder");
+
     }
 
     @Override
@@ -55,9 +63,13 @@ public class BasicOmniTeleOp extends OpMode {
         // When Y is pressed
         if (gamepad1.y) {
             if (flywheel.getVelocity() == 0) { // If the flywheel is off, turn it on
-                flywheel.setVelocity(300);
+                flywheel.setVelocity(3000);
+                leftFeeder.setPower(1.0);
+                rightFeeder.setPower(1.0);
             } else {
                 flywheel.setVelocity(0); // If the flywheel is on, turn it off
+                leftFeeder.setPower(0.0);
+                rightFeeder.setPower(0.0);
             }
         }
 
