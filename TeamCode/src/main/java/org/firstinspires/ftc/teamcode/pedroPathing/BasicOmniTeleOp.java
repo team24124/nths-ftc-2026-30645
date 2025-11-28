@@ -48,6 +48,8 @@ public class BasicOmniTeleOp extends OpMode {
         leftFeeder = hardwareMap.get(CRServo.class, "leftFeeder");
         rightFeeder = hardwareMap.get(CRServo.class, "rightFeeder");
 
+        rightFeeder.setDirection(DcMotorSimple.Direction.REVERSE);
+
     }
 
     @Override
@@ -63,7 +65,7 @@ public class BasicOmniTeleOp extends OpMode {
         // When Y is pressed
         if (gamepad1.y) {
             if (flywheel.getVelocity() == 0) { // If the flywheel is off, turn it on
-                flywheel.setVelocity(3000);
+                flywheel.setVelocity(1000);
                 leftFeeder.setPower(1.0);
                 rightFeeder.setPower(1.0);
             } else {
