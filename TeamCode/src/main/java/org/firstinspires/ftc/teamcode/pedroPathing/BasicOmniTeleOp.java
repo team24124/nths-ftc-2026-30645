@@ -65,7 +65,7 @@ public class BasicOmniTeleOp extends OpMode {
         // When Y is pressed
         if (gamepad1.y) {
             if (flywheel.getVelocity() == 0) { // If the flywheel is off, turn it on
-                flywheel.setVelocity(1000);
+                flywheel.setVelocity(2800);
                 leftFeeder.setPower(1.0);
                 rightFeeder.setPower(1.0);
             } else {
