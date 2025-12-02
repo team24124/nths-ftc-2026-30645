@@ -24,32 +24,30 @@ import java.util.function.Supplier;
 @TeleOp
 public class BasicOmniTeleOp extends OpMode {
     private Follower follower;
-    public static Pose startingPose; //See ExampleAuto to understand how to use this
-    private boolean automatedDrive;
-    private Supplier<PathChain> pathChain;
     private TelemetryManager telemetryM;
 
     private DcMotorEx flywheel;
+    private CRServo leftSmallFlywheel, rightSmallFlywheel;
 
-    private CRServo leftFeeder;
-
-    private CRServo rightFeeder;
+    private boolean isRotatingToTarget = false;
+    private double targetHeading = 0;
+    private boolean rightStickPressed = false;
+    private boolean leftStickPressed = false;
 
     @Override
     public void init() {
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(new Pose());
         follower.update();
+        telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
 
-        // Intiailize the flywheel
-        flywheel = hardwareMap.get(DcMotorEx.class,"launcher");
+        // Initialize the flywheels
+        flywheel = hardwareMap.get(DcMotorEx.class, "launcher");
+        leftSmallFlywheel = hardwareMap.get(CRServo.class, "leftFeeder");
+        rightSmallFlywheel = hardwareMap.get(CRServo.class, "rightFeeder");
+
+        // Set zero power behaviour of the flywheels
         flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-
-        leftFeeder = hardwareMap.get(CRServo.class, "leftFeeder");
-        rightFeeder = hardwareMap.get(CRServo.class, "rightFeeder");
-
-        rightFeeder.setDirection(DcMotorSimple.Direction.REVERSE);
-
     }
 
     @Override
@@ -59,28 +57,112 @@ public class BasicOmniTeleOp extends OpMode {
 
     @Override
     public void loop() {
-        //Call this once per loop
         follower.update();
+        telemetryM.update();
 
-        // When Y is pressed
-        if (gamepad1.y) {
-            if (flywheel.getVelocity() == 0) { // If the flywheel is off, turn it on
-                flywheel.setVelocity(2800);
-                leftFeeder.setPower(1.0);
-                rightFeeder.setPower(1.0);
+        // Joystick Movement Variables
+        double line = -gamepad1.left_stick_y;
+        double strafe = -gamepad1.left_stick_x;
+        double turn = -gamepad1.right_stick_x * 0.5;
+
+        // Speed of Micro Adjustments
+        double microSpeed = 0.1; // Adjust this (lower = slower)
+
+        // Quick Rotation Angle
+        double quickRotationAngle = 180.0;
+
+        // Micro Movement Control
+        if (gamepad1.dpad_up) {
+            line = microSpeed;
+            strafe = 0.0;
+        } else if (gamepad1.dpad_down) {
+            line = -microSpeed;
+            strafe = 0.0;
+        } else if (gamepad1.dpad_right) {
+            line = 0.0;
+            strafe = -microSpeed;
+        } else if (gamepad1.dpad_left) {
+            line = 0.0;
+            strafe = microSpeed;
+        }
+
+        // Micro Rotation Control
+        if (gamepad1.right_bumper) {
+            turn = -microSpeed;
+        } else if (gamepad1.left_bumper) {
+            turn = microSpeed;
+        }
+
+        // Quick Rotation Control
+        if (gamepad1.right_stick_button && !rightStickPressed && !isRotatingToTarget) {
+            rightStickPressed = true;
+            double currentHeading = Math.toDegrees(follower.getPose().getHeading());
+            targetHeading = Math.toRadians(currentHeading - quickRotationAngle);
+            isRotatingToTarget = true;
+        } else if (!gamepad1.right_stick_button) {
+            rightStickPressed = false;
+        }
+
+        // If rotating to target, override turn control
+        if (isRotatingToTarget) {
+            double currentHeading = follower.getPose().getHeading();
+            double headingError = targetHeading - currentHeading;
+
+            // Normalize error to -PI to PI
+            while (headingError > Math.PI) headingError -= 2 * Math.PI;
+            while (headingError < -Math.PI) headingError += 2 * Math.PI;
+
+            // Stop if close enough (within 1 degree)
+            if (Math.abs(Math.toDegrees(headingError)) < 1.0) {
+                turn = 0;
+                isRotatingToTarget = false;
             } else {
-                flywheel.setVelocity(0); // If the flywheel is on, turn it off
-                leftFeeder.setPower(0.0);
-                rightFeeder.setPower(0.0);
+                // Proportional control - turn towards target
+                turn = headingError * 0.5; // Adjust multiplier for speed
             }
         }
 
-        // These set joystick movement and rotational controls
-        follower.setTeleOpDrive(
-                -gamepad1.left_stick_y, // Move left and right
-                -gamepad1.left_stick_x, // Move forward and backward
-                -gamepad1.right_stick_x, // Rotate left and right
-                true
-        );
+        // Set gamepad controls
+        follower.setTeleOpDrive(line, strafe, turn, true);
+
+        // Small Flywheel Control
+        if (gamepad1.right_trigger > 0.1) {
+            rotateSmallFlywheel(1.0);
+        } else {
+            rotateSmallFlywheel(0.0);
+        }
+
+        // Flywheel control
+        if (gamepad1.left_trigger > 0.1) {
+            rotateFlywheel(gamepad1.left_trigger);
+        }
+
+        telemetryUpdate();
+    }
+
+    private void telemetryUpdate() {
+        // Controls Manual
+        telemetry.addLine("====CONTROLS====");
+        telemetry.addLine("Left Joystick: Movement");
+        telemetry.addLine("Right Joystick: Rotation");
+        telemetry.addLine("Right Joystick Button: Rotate 180 degrees clockwise");
+        telemetry.addLine("Right Trigger: Flywheel");
+        telemetry.addLine("D-Pad: Microadjustments for movement");
+        telemetry.addLine("Left + Right Bumper: Microadjustments for rotation");
+
+        // Info
+        telemetry.addLine("\n====ROBOT INFO====");
+        telemetry.addData("Current Heading (deg)", Math.toDegrees(follower.getPose().getHeading()));
+
+        telemetry.update();
+    }
+
+    private void rotateFlywheel(double power) {
+        flywheel.setPower(power);
+    }
+
+    private void rotateSmallFlywheel(double power) {
+        rightSmallFlywheel.setPower(power);
+        leftSmallFlywheel.setPower(power);
     }
 }
