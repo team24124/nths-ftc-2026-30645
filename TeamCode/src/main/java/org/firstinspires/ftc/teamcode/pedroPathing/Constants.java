@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
+import com.pedropathing.control.FilteredPIDFCoefficients;
 import com.pedropathing.control.PIDFCoefficients;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.follower.FollowerConstants;
@@ -16,11 +17,17 @@ public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
             .forwardZeroPowerAcceleration(-51.094223187027445)
             .lateralZeroPowerAcceleration(-53.5033243157987)
-            .translationalPIDFCoefficients(new PIDFCoefficients(0.03, 0, 0.001, 0.015))
-            .headingPIDFCoefficients(new PIDFCoefficients(0.6, 0, 0.001, 0.02))
+            .translationalPIDFCoefficients(new PIDFCoefficients(0.03, 0, 0.001, 0.025))
+            .headingPIDFCoefficients(new PIDFCoefficients(0.6, 0, 0.001, 0.03))
+            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.013, 0, 0.0001,0.6, 0.025 ))
+            .centripetalScaling(0.00052)
             .mass(8.73);
 
-    public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
+    public static PathConstraints pathConstraints = new PathConstraints(
+            0.99,
+            100,
+            0.94 ,
+            1);
 
     public static Follower createFollower(HardwareMap hardwareMap) {
         return new FollowerBuilder(followerConstants, hardwareMap)
@@ -47,7 +54,6 @@ public class Constants {
             .forwardTicksToInches(0.00288307075785091)
             .strafeTicksToInches(0.0031120818023350556)
             .turnTicksToInches(0.0019723946229485635)
-            //this worked?
             .leftPodY(6.25)
             .rightPodY(-6.25)
             .strafePodX(-6)
