@@ -15,6 +15,7 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 
 
@@ -27,7 +28,7 @@ public class BasicOmniTeleOp extends OpMode {
     private TelemetryManager telemetryM;
 
     private DcMotorEx flywheel;
-    private CRServo leftSmallFlywheel, rightSmallFlywheel;
+    private CRServo leftServo, rightServo;
 
     private boolean isRotatingToTarget = false;
     private double targetHeading = 0;
@@ -41,13 +42,20 @@ public class BasicOmniTeleOp extends OpMode {
         follower.update();
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
 
-        // Initialize the flywheels
+        // Initialize hardware
         flywheel = hardwareMap.get(DcMotorEx.class, "launcher");
-        leftSmallFlywheel = hardwareMap.get(CRServo.class, "leftFeeder");
-        rightSmallFlywheel = hardwareMap.get(CRServo.class, "rightFeeder");
+        flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftServo = hardwareMap.get(CRServo.class, "leftFeeder");
+        rightServo = hardwareMap.get(CRServo.class, "rightFeeder");
+
+        // Reverse as necessary
+        rightServo.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // Set zero power behaviour of the flywheels
         flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
+        // Tune PIDF for flywheel
+        flywheel.setVelocityPIDFCoefficients(4, 0, 0, 10);
     }
 
     @Override
@@ -61,9 +69,9 @@ public class BasicOmniTeleOp extends OpMode {
         telemetryM.update();
 
         // Joystick Movement Variables
-        double line = -gamepad1.left_stick_y;
-        double strafe = -gamepad1.left_stick_x;
-        double turn = -gamepad1.right_stick_x * 0.5;
+        double line = -gamepad1.left_stick_y*0.6;
+        double strafe = -gamepad1.left_stick_x*0.6;
+        double turn = -gamepad1.right_stick_x * 0.4;
 
         // Speed of Micro Adjustments
         double microSpeed = 0.1; // Adjust this (lower = slower)
@@ -127,14 +135,16 @@ public class BasicOmniTeleOp extends OpMode {
 
         // Small Flywheel Control
         if (gamepad1.right_trigger > 0.1) {
-            rotateSmallFlywheel(1.0);
+            rotateServos(0.5);
         } else {
-            rotateSmallFlywheel(0.0);
+            rotateServos(0.0);
         }
 
         // Flywheel control
         if (gamepad1.left_trigger > 0.1) {
-            rotateFlywheel(gamepad1.left_trigger);
+            rotateFlywheel(1515);
+        } else {
+            rotateFlywheel(0.0);
         }
 
         telemetryUpdate();
@@ -146,23 +156,24 @@ public class BasicOmniTeleOp extends OpMode {
         telemetry.addLine("Left Joystick: Movement");
         telemetry.addLine("Right Joystick: Rotation");
         telemetry.addLine("Right Joystick Button: Rotate 180 degrees clockwise");
-        telemetry.addLine("Right Trigger: Flywheel");
+        telemetry.addLine("Left Trigger: Flywheel");
         telemetry.addLine("D-Pad: Microadjustments for movement");
         telemetry.addLine("Left + Right Bumper: Microadjustments for rotation");
 
         // Info
         telemetry.addLine("\n====ROBOT INFO====");
         telemetry.addData("Current Heading (deg)", Math.toDegrees(follower.getPose().getHeading()));
+        telemetry.addData("launcher velocity", flywheel.getVelocity());
 
         telemetry.update();
     }
 
     private void rotateFlywheel(double power) {
-        flywheel.setPower(power);
+        flywheel.setVelocity(power);
     }
 
-    private void rotateSmallFlywheel(double power) {
-        rightSmallFlywheel.setPower(power);
-        leftSmallFlywheel.setPower(power);
+    private void rotateServos(double power) {
+        rightServo.setPower(power);
+        leftServo.setPower(power);
     }
 }
