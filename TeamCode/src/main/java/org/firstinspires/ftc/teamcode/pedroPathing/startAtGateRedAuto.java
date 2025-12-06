@@ -22,17 +22,15 @@ public class startAtGateRedAuto extends OpMode {
     private int pathState;
 
     // Start Pose
-    private final Pose startPose = new Pose(122, 122, Math.toRadians(220));
+    private final Pose startPose = new Pose(122, 122, Math.toRadians(225));
 
-    private final Pose moveBackPose = new Pose(112,112,Math.toRadians(220));
+    private final Pose moveBackPose = new Pose(112,112,Math.toRadians(225));
     // End Pose
     private final Pose endPose = new Pose(90, 140, Math.toRadians(270));
 
     private Path forwardPath;
 
     private Path toEndPose;
-
-    private Path stayPath;
 
     private DcMotorEx flywheel;
     private CRServo leftServo, rightServo;
@@ -79,7 +77,7 @@ public class startAtGateRedAuto extends OpMode {
             rotateFlywheel(1515.0);
             if (shootingTimer.getElapsedTime() - timeAtShooting > 5000 &&
                     shootingTimer.getElapsedTime() - timeAtShooting<11000){
-                rotateServos(0.45);
+                rotateServos(0.28);
             }
         }
         //slowing down flywheel
@@ -133,7 +131,7 @@ public class startAtGateRedAuto extends OpMode {
         flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         // Tune PIDF for flywheel
-        flywheel.setVelocityPIDFCoefficients(4.3, 0, 0, 9);
+        flywheel.setVelocityPIDFCoefficients(4.6, 0, 0, 9.2);
     }
 
     private void rotateFlywheel(double power) {

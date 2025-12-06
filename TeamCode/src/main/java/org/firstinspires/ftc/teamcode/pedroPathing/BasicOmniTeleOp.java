@@ -55,7 +55,7 @@ public class BasicOmniTeleOp extends OpMode {
         flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         // Tune PIDF for flywheel
-        flywheel.setVelocityPIDFCoefficients(4, 0, 0, 10);
+        flywheel.setVelocityPIDFCoefficients(4.6, 0, 0, 10);
     }
 
     @Override

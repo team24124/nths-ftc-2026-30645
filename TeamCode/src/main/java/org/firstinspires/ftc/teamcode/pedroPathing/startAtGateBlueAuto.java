@@ -22,9 +22,9 @@ public class startAtGateBlueAuto extends OpMode {
     private int pathState;
 
     // Start Pose
-    private final Pose startPose = new Pose(22, 122, Math.toRadians(320));
+    private final Pose startPose = new Pose(22, 122, Math.toRadians(315));
 
-    private final Pose moveBackPose = new Pose(32,112,Math.toRadians(320));
+    private final Pose moveBackPose = new Pose(32,112,Math.toRadians(315));
     // End Pose
     private final Pose endPose = new Pose(60, 140, Math.toRadians(270));
 
@@ -74,7 +74,7 @@ public class startAtGateBlueAuto extends OpMode {
         Timer shootingTimer = new Timer();
         long timeAtShooting = shootingTimer.getElapsedTime();
         while(shootingTimer.getElapsedTime() - timeAtShooting< 11000){
-            rotateFlywheel(1515.0);
+            rotateFlywheel(1515.0);//Target is 1100
             if (shootingTimer.getElapsedTime() - timeAtShooting > 5000 &&
                     shootingTimer.getElapsedTime() - timeAtShooting<11000){
                 rotateServos(0.28);
@@ -131,7 +131,7 @@ public class startAtGateBlueAuto extends OpMode {
         flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         // Tune PIDF for flywheel
-        flywheel.setVelocityPIDFCoefficients(4.45, 0, 0, 9.2);
+        flywheel.setVelocityPIDFCoefficients(4.6, 0, 0, 9.2);
     }
 
     private void rotateFlywheel(double power) {
