@@ -19,6 +19,7 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 
 
+import java.util.Timer;
 import java.util.function.Supplier;
 
 @Configurable
@@ -27,8 +28,11 @@ public class BasicOmniTeleOp extends OpMode {
     private Follower follower;
     private TelemetryManager telemetryM;
 
+    private DcMotorEx intake2;
+    private DcMotorEx intake;
     private DcMotorEx flywheel;
     private CRServo leftServo, rightServo;
+    private Servo kicker;
 
     private boolean isRotatingToTarget = false;
     private double targetHeading = 0;
@@ -47,6 +51,9 @@ public class BasicOmniTeleOp extends OpMode {
         flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         leftServo = hardwareMap.get(CRServo.class, "leftFeeder");
         rightServo = hardwareMap.get(CRServo.class, "rightFeeder");
+        intake = hardwareMap.get(DcMotorEx.class, "intake1");
+        intake2 = hardwareMap.get(DcMotorEx.class, "intake2");
+        kicker = hardwareMap.get(Servo.class, "kicker");
 
         // Reverse as necessary
         rightServo.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -56,6 +63,7 @@ public class BasicOmniTeleOp extends OpMode {
 
         // Tune PIDF for flywheel
         flywheel.setVelocityPIDFCoefficients(4.6, 0, 0, 10);
+
     }
 
     @Override
@@ -133,11 +141,31 @@ public class BasicOmniTeleOp extends OpMode {
         // Set gamepad controls
         follower.setTeleOpDrive(line, strafe, turn, true);
 
+        /*
         // Small Flywheel Control
         if (gamepad1.right_trigger > 0.1) {
             rotateServos(0.5);
         } else {
             rotateServos(0.0);
+        }
+        */
+
+        //kicker
+        if (gamepad2.y){
+            kicker.setPosition(//final kick angle);
+            Timer revert = new Timer();
+            if (revert == 0.5){
+                kicker.setPosition(//where it goes back to);
+            }
+        }
+
+        //intakes, reverse if needed, copy reverses from above
+        if (gamepad2.right_trigger > 0.1){
+            intake.setPower(1);
+            intake2.setPower(1);
+        }else{
+            intake.setPower(0);
+            intake2.setPower(0);
         }
 
         // Flywheel control
@@ -157,6 +185,7 @@ public class BasicOmniTeleOp extends OpMode {
         telemetry.addLine("Right Joystick: Rotation");
         telemetry.addLine("Right Joystick Button: Rotate 180 degrees clockwise");
         telemetry.addLine("Left Trigger: Flywheel");
+        telemetry.addLine("Right Trigger: Intakes");
         telemetry.addLine("D-Pad: Microadjustments for movement");
         telemetry.addLine("Left + Right Bumper: Microadjustments for rotation");
 
