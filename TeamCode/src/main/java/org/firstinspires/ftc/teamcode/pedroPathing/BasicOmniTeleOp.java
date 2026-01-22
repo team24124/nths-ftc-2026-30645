@@ -133,7 +133,7 @@ public class BasicOmniTeleOp extends OpMode {
         follower.setTeleOpDrive(line, strafe, turn, true);
 
         // Small Flywheel Control
-        if (gamepad1.y > 0.1) {
+        if (gamepad1.y) {
             kicker.setPosition(0);
         } else {
             kicker.setPosition(0.90);
@@ -146,7 +146,7 @@ public class BasicOmniTeleOp extends OpMode {
             rotateFlywheel(0.0);
         }
 
-        if(gamepad1.right_trigger){
+        if(gamepad1.right_trigger > 0.1){
             intake.setPower(1);
         }
 
