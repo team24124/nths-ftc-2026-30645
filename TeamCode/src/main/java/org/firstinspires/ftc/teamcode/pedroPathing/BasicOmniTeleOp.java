@@ -152,10 +152,10 @@ public class BasicOmniTeleOp extends OpMode {
 
         //kicker
         if (gamepad2.y){
-            kicker.setPosition(//final kick angle);
+            kicker.setPosition(/*final kick angle*/);
             Timer revert = new Timer();
             if (revert == 0.5){
-                kicker.setPosition(//where it goes back to);
+                kicker.setPosition(/*where it goes back to*/);
             }
         }
 
@@ -180,14 +180,16 @@ public class BasicOmniTeleOp extends OpMode {
 
     private void telemetryUpdate() {
         // Controls Manual
-        telemetry.addLine("====CONTROLS====");
+        telemetry.addLine("====CONTROLS (GAMEPAD 1)====");
         telemetry.addLine("Left Joystick: Movement");
         telemetry.addLine("Right Joystick: Rotation");
         telemetry.addLine("Right Joystick Button: Rotate 180 degrees clockwise");
-        telemetry.addLine("Left Trigger: Flywheel");
-        telemetry.addLine("Right Trigger: Intakes");
         telemetry.addLine("D-Pad: Microadjustments for movement");
         telemetry.addLine("Left + Right Bumper: Microadjustments for rotation");
+        telemetry.addLine("====CONTROLS (GAMEPAD 2)====");
+        telemetry.addLine("Left Trigger: Flywheel");
+        telemetry.addLine("Right Trigger: Intakes");
+        telemetry.addLine("Y: Kicker");
 
         // Info
         telemetry.addLine("\n====ROBOT INFO====");
