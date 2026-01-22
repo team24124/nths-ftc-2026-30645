@@ -28,7 +28,9 @@ public class BasicOmniTeleOp extends OpMode {
     private TelemetryManager telemetryM;
 
     private DcMotorEx flywheel;
-    private CRServo leftServo, rightServo;
+    private Servo kicker;
+
+    private DcMotorEx intake;
 
     private boolean isRotatingToTarget = false;
     private double targetHeading = 0;
@@ -45,17 +47,14 @@ public class BasicOmniTeleOp extends OpMode {
         // Initialize hardware
         flywheel = hardwareMap.get(DcMotorEx.class, "launcher");
         flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        leftServo = hardwareMap.get(CRServo.class, "leftFeeder");
-        rightServo = hardwareMap.get(CRServo.class, "rightFeeder");
-
-        // Reverse as necessary
-        rightServo.setDirection(DcMotorSimple.Direction.REVERSE);
+        kicker = hardwareMap.get(Servo.class, "kicker");
+        intake = hardwareMap.get(DcMotorEx.class, "intake");
 
         // Set zero power behaviour of the flywheels
         flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         // Tune PIDF for flywheel
-        flywheel.setVelocityPIDFCoefficients(4.6, 0, 0, 10);
+        flywheel.setVelocityPIDFCoefficients(5.5, 0, 0, 15);
     }
 
     @Override
@@ -134,17 +133,21 @@ public class BasicOmniTeleOp extends OpMode {
         follower.setTeleOpDrive(line, strafe, turn, true);
 
         // Small Flywheel Control
-        if (gamepad1.right_trigger > 0.1) {
-            rotateServos(0.5);
+        if (gamepad1.y > 0.1) {
+            kicker.setPosition(0);
         } else {
-            rotateServos(0.0);
+            kicker.setPosition(0.90);
         }
 
         // Flywheel control
         if (gamepad1.left_trigger > 0.1) {
-            rotateFlywheel(1515);
+            rotateFlywheel(1100);
         } else {
             rotateFlywheel(0.0);
+        }
+
+        if(gamepad1.right_trigger){
+            intake.setPower(1);
         }
 
         telemetryUpdate();
@@ -172,8 +175,4 @@ public class BasicOmniTeleOp extends OpMode {
         flywheel.setVelocity(power);
     }
 
-    private void rotateServos(double power) {
-        rightServo.setPower(power);
-        leftServo.setPower(power);
-    }
 }
