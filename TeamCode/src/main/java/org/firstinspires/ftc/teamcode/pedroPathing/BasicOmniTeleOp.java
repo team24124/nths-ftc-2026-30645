@@ -48,7 +48,6 @@ public class BasicOmniTeleOp extends OpMode {
         flywheel = hardwareMap.get(DcMotorEx.class, "launcher");
         flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         kicker = hardwareMap.get(Servo.class, "kicker");
-        //kicker.setDirection(Servo.Direction.REVERSE);
         intake = hardwareMap.get(DcMotorEx.class, "intake");
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
 
