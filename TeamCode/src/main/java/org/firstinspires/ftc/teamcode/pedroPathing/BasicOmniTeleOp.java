@@ -48,7 +48,9 @@ public class BasicOmniTeleOp extends OpMode {
         flywheel = hardwareMap.get(DcMotorEx.class, "launcher");
         flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         kicker = hardwareMap.get(Servo.class, "kicker");
+        //kicker.setDirection(Servo.Direction.REVERSE);
         intake = hardwareMap.get(DcMotorEx.class, "intake");
+        intake.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // Set zero power behaviour of the flywheels
         flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -136,7 +138,7 @@ public class BasicOmniTeleOp extends OpMode {
         if (gamepad1.y) {
             kicker.setPosition(0);
         } else {
-            kicker.setPosition(0.90);
+            kicker.setPosition(0.8);
         }
 
         // Flywheel control
@@ -148,6 +150,8 @@ public class BasicOmniTeleOp extends OpMode {
 
         if(gamepad1.right_trigger > 0.1){
             intake.setPower(1);
+        } else {
+            intake.setPower(0);
         }
 
         telemetryUpdate();
@@ -167,6 +171,7 @@ public class BasicOmniTeleOp extends OpMode {
         telemetry.addLine("\n====ROBOT INFO====");
         telemetry.addData("Current Heading (deg)", Math.toDegrees(follower.getPose().getHeading()));
         telemetry.addData("launcher velocity", flywheel.getVelocity());
+        telemetry.addData("kiicker pos" , kicker.getPosition());
 
         telemetry.update();
     }
