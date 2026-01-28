@@ -47,9 +47,9 @@ public class BasicOmniTeleOp extends OpMode {
         // Initialize hardware
         flywheel = hardwareMap.get(DcMotorEx.class, "launcher");
         flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        flywheel.setDirection(DcMotorSimple.Direction.REVERSE);
         kicker = hardwareMap.get(Servo.class, "kicker");
         intake = hardwareMap.get(DcMotorEx.class, "intake");
-        intake.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // Set zero power behaviour of the flywheels
         flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -134,22 +134,30 @@ public class BasicOmniTeleOp extends OpMode {
         follower.setTeleOpDrive(line, strafe, turn, true);
 
         // Small Flywheel Control
-        if (gamepad1.y) {
+        if (gamepad2.y) {
             kicker.setPosition(0);
         } else {
             kicker.setPosition(0.8);
         }
 
         // Flywheel control
-        if (gamepad1.left_trigger > 0.1) {
+        if (gamepad2.left_trigger > 0.1) {
             rotateFlywheel(1100);
         } else {
             rotateFlywheel(0.0);
         }
 
-        if(gamepad1.right_trigger > 0.1){
+        if(gamepad2.right_trigger > 0.1){
+            intake.setDirection(DcMotorSimple.Direction.REVERSE);
             intake.setPower(1);
         } else {
+            intake.setPower(0);
+        }
+
+        if(gamepad2.right_bumper){
+            intake.setDirection(DcMotorSimple.Direction.FORWARD);
+            intake.setPower(1);
+        } else{
             intake.setPower(0);
         }
 
@@ -158,19 +166,23 @@ public class BasicOmniTeleOp extends OpMode {
 
     private void telemetryUpdate() {
         // Controls Manual
-        telemetry.addLine("====CONTROLS====");
+        telemetry.addLine("====CONTROLS FOR GAMEPAD 1====");
         telemetry.addLine("Left Joystick: Movement");
         telemetry.addLine("Right Joystick: Rotation");
         telemetry.addLine("Right Joystick Button: Rotate 180 degrees clockwise");
-        telemetry.addLine("Left Trigger: Flywheel");
         telemetry.addLine("D-Pad: Microadjustments for movement");
         telemetry.addLine("Left + Right Bumper: Microadjustments for rotation");
+        telemetry.addLine("====CONTROLS FOR GAMEPAD 2====");
+        telemetry.addLine("Right bumper: reverse intake");
+        telemetry.addLine("Right trigger: intake");
+        telemetry.addLine("left Trigger: Flywheel");
+        telemetry.addLine("Y button: kicker");
 
         // Info
         telemetry.addLine("\n====ROBOT INFO====");
         telemetry.addData("Current Heading (deg)", Math.toDegrees(follower.getPose().getHeading()));
         telemetry.addData("launcher velocity", flywheel.getVelocity());
-        telemetry.addData("kiicker pos" , kicker.getPosition());
+        telemetry.addData("kicker pos" , kicker.getPosition());
 
         telemetry.update();
     }
