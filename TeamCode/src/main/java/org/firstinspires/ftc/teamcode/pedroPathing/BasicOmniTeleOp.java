@@ -17,6 +17,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
 
 
 import java.util.function.Supplier;
@@ -37,6 +38,12 @@ public class BasicOmniTeleOp extends OpMode {
     private boolean rightStickPressed = false;
     private boolean leftStickPressed = false;
 
+    private int flywheelVelocity = 1700;
+    private boolean lastLeftBumper = false;
+    private int i = 0;
+
+    private VoltageSensor batteryVoltageSensor;
+
     @Override
     public void init() {
         follower = Constants.createFollower(hardwareMap);
@@ -50,12 +57,15 @@ public class BasicOmniTeleOp extends OpMode {
         flywheel.setDirection(DcMotorSimple.Direction.REVERSE);
         kicker = hardwareMap.get(Servo.class, "kicker");
         intake = hardwareMap.get(DcMotorEx.class, "intake");
+        intake.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // Set zero power behaviour of the flywheels
         flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         // Tune PIDF for flywheel
-        flywheel.setVelocityPIDFCoefficients(5.5, 0, 0, 15);
+        flywheel.setVelocityPIDFCoefficients(5, 0, 0, 13.7);
+
+        batteryVoltageSensor = hardwareMap.voltageSensor.iterator().next();
     }
 
     @Override
@@ -133,31 +143,36 @@ public class BasicOmniTeleOp extends OpMode {
         // Set gamepad controls
         follower.setTeleOpDrive(line, strafe, turn, true);
 
-        // Small Flywheel Control
         if (gamepad2.y) {
-            kicker.setPosition(0);
+            kicker.setPosition(0.5);
         } else {
-            kicker.setPosition(0.8);
+            kicker.setPosition(1) ;//keep at 1
         }
+        //flywheel velocity selection
+        if (gamepad2.left_bumper && !lastLeftBumper) {
+            i++;
+            flywheelVelocity = (i % 2 == 0) ? 1600 : 1400;
+        }
+        lastLeftBumper = gamepad2.left_bumper;
 
         // Flywheel control
+        double currentVoltage = batteryVoltageSensor.getVoltage();
+        double compensationFactor = 12.0 / currentVoltage;
         if (gamepad2.left_trigger > 0.1) {
-            rotateFlywheel(1100);
+            rotateFlywheel(flywheelVelocity * compensationFactor);
         } else {
-            rotateFlywheel(0.0);
+            rotateFlywheel(0);
         }
 
-        if(gamepad2.right_trigger > 0.1){
+        if (gamepad2.right_trigger > 0.1) {
+            // Intake mode
             intake.setDirection(DcMotorSimple.Direction.REVERSE);
             intake.setPower(1);
-        } else {
-            intake.setPower(0);
-        }
-
-        if(gamepad2.right_bumper){
+        } else if (gamepad2.right_bumper) {
+            // Outtake mode
             intake.setDirection(DcMotorSimple.Direction.FORWARD);
             intake.setPower(1);
-        } else{
+        } else {
             intake.setPower(0);
         }
 
@@ -177,11 +192,13 @@ public class BasicOmniTeleOp extends OpMode {
         telemetry.addLine("Right trigger: intake");
         telemetry.addLine("left Trigger: Flywheel");
         telemetry.addLine("Y button: kicker");
+        telemetry.addLine("left bumper: select velocity");
 
         // Info
         telemetry.addLine("\n====ROBOT INFO====");
         telemetry.addData("Current Heading (deg)", Math.toDegrees(follower.getPose().getHeading()));
         telemetry.addData("launcher velocity", flywheel.getVelocity());
+        telemetry.addData("selscted launcher velocity", flywheelVelocity);
         telemetry.addData("kicker pos" , kicker.getPosition());
 
         telemetry.update();
