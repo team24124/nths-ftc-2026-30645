@@ -31,6 +31,10 @@ public class BasicOmniTeleOp extends OpMode {
     private DcMotorEx flywheel;
     private Servo kicker;
 
+    private CRServo feederL;
+
+    private CRServo feederR;
+
     private DcMotorEx intake;
 
     private boolean isRotatingToTarget = false;
@@ -41,6 +45,8 @@ public class BasicOmniTeleOp extends OpMode {
     private int flywheelVelocity = 1700;
     private boolean lastLeftBumper = false;
     private int i = 0;
+
+    private boolean yPressed = false;
 
     private VoltageSensor batteryVoltageSensor;
 
@@ -55,9 +61,13 @@ public class BasicOmniTeleOp extends OpMode {
         flywheel = hardwareMap.get(DcMotorEx.class, "launcher");
         flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         flywheel.setDirection(DcMotorSimple.Direction.REVERSE);
-        kicker = hardwareMap.get(Servo.class, "kicker");
-        intake = hardwareMap.get(DcMotorEx.class, "intake");
-        intake.setDirection(DcMotorSimple.Direction.REVERSE);
+        //kicker = hardwareMap.get(Servo.class, "kicker");
+       // intake = hardwareMap.get(DcMotorEx.class, "intake");
+        //intake.setDirection(DcMotorSimple.Direction.REVERSE);
+        feederL = hardwareMap.get(CRServo.class, "feederL");
+        feederR = hardwareMap.get(CRServo.class, "feederR");
+        feederL.setDirection(CRServo.Direction.REVERSE);
+        feederR.setDirection(CRServo.Direction.REVERSE);
 
         // Set zero power behaviour of the flywheels
         flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -143,27 +153,46 @@ public class BasicOmniTeleOp extends OpMode {
         // Set gamepad controls
         follower.setTeleOpDrive(line, strafe, turn, true);
 
+        /*
         if (gamepad2.y) {
             kicker.setPosition(0.5);
         } else {
             kicker.setPosition(1) ;//keep at 1
         }
+        */
+
+        //turn on or off feeders
+        if(gamepad1.y && !yPressed){
+            feederL.setPower(1);
+            feederR.setPower(1);
+            yPressed = true;
+        }else if(gamepad1.y && yPressed){
+            feederL.setPower(0);
+            feederR.setPower(0);
+            yPressed = false;
+        }
+
         //flywheel velocity selection
-        if (gamepad2.left_bumper && !lastLeftBumper) {
+        if (gamepad1.left_bumper && !lastLeftBumper) {
             i++;
             flywheelVelocity = (i % 2 == 0) ? 1600 : 1400;
         }
-        lastLeftBumper = gamepad2.left_bumper;
+        lastLeftBumper = gamepad1.left_bumper;
+
+        private void rotateFlywheel(double power) {
+            flywheel.setVelocity(power);
+        }
 
         // Flywheel control
         double currentVoltage = batteryVoltageSensor.getVoltage();
         double compensationFactor = 12.0 / currentVoltage;
-        if (gamepad2.left_trigger > 0.1) {
+        if (gamepad1.left_trigger > 0.1) {
             rotateFlywheel(flywheelVelocity * compensationFactor);
         } else {
             rotateFlywheel(0);
         }
 
+        /*
         if (gamepad2.right_trigger > 0.1) {
             // Intake mode
             intake.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -178,6 +207,7 @@ public class BasicOmniTeleOp extends OpMode {
 
         telemetryUpdate();
     }
+    */
 
     private void telemetryUpdate() {
         // Controls Manual
@@ -187,25 +217,22 @@ public class BasicOmniTeleOp extends OpMode {
         telemetry.addLine("Right Joystick Button: Rotate 180 degrees clockwise");
         telemetry.addLine("D-Pad: Microadjustments for movement");
         telemetry.addLine("Left + Right Bumper: Microadjustments for rotation");
-        telemetry.addLine("====CONTROLS FOR GAMEPAD 2====");
-        telemetry.addLine("Right bumper: reverse intake");
-        telemetry.addLine("Right trigger: intake");
-        telemetry.addLine("left Trigger: Flywheel");
-        telemetry.addLine("Y button: kicker");
+        telemetry.addLine("Y button: feeders");
         telemetry.addLine("left bumper: select velocity");
+        telemetry.addLine("left Trigger: Flywheel");
+        //telemetry.addLine("====CONTROLS FOR GAMEPAD 2====");
+        //telemetry.addLine("Right bumper: reverse intake");
+        //telemetry.addLine("Right trigger: intake");
 
         // Info
         telemetry.addLine("\n====ROBOT INFO====");
         telemetry.addData("Current Heading (deg)", Math.toDegrees(follower.getPose().getHeading()));
         telemetry.addData("launcher velocity", flywheel.getVelocity());
-        telemetry.addData("selscted launcher velocity", flywheelVelocity);
-        telemetry.addData("kicker pos" , kicker.getPosition());
+        telemetry.addData("selected launcher velocity", flywheelVelocity);
+        //telemetry.addData("kicker pos" , kicker.getPosition());
 
         telemetry.update();
     }
 
-    private void rotateFlywheel(double power) {
-        flywheel.setVelocity(power);
-    }
 
 }
